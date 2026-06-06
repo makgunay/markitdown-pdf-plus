@@ -73,7 +73,7 @@ class PdfPlusConverter(DocumentConverter):
                                         markdown=md, bbox=bbox, cols=cols))
                     # drop paragraph lines inside this table region
                     blocks = [b for b in blocks
-                              if not (b.kind == "paragraph" and b.page == pi
+                              if not (b.kind in ("paragraph", "heading") and b.page == pi
                                       and self._line_inside(b, bbox, lines))]
                 # figures
                 figs = fx.extract(page, pi, data)

@@ -1,10 +1,7 @@
-import re
 from collections import Counter
 from typing import List
 
 from ._model import Line, Block
-
-_NUMBERED = re.compile(r"^\d+(\.\d+)*\.?\s+\S")
 
 
 def body_font_size(lines: List[Line]) -> float:
@@ -22,8 +19,8 @@ def heading_level(line: Line, body: float) -> int:
         return 2 if short else 0
     if size >= body + 0.6:
         return 3 if short else 0
-    # same size: promote only short bold lines, or numbered short lines
-    if short and (line.bold or _NUMBERED.match(line.text.strip())):
+    # same size: promote only short bold lines (real section headers are larger font)
+    if short and line.bold:
         return 2
     return 0
 

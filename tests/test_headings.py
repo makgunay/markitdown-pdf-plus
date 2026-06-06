@@ -36,3 +36,13 @@ def test_bold_short_line_promoted_when_no_size_signal():
     ]
     blocks = HeadingAnnotator().annotate(lines)
     assert blocks[1].kind == "heading"
+
+
+def test_numbered_table_row_not_promoted():
+    lines = [
+        _ln("Body sentence at the dominant font size for context here.", 12.0, top=0),
+        _ln("1 (First Lien Senior Secured)", 12.0, top=30),  # table row label, body size
+        _ln("Another body sentence at the dominant font size here.", 12.0, top=60),
+    ]
+    blocks = HeadingAnnotator().annotate(lines)
+    assert blocks[1].kind == "paragraph"

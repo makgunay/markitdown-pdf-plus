@@ -19,3 +19,16 @@ def headings_pdf_bytes():
     c.save()
     buf.seek(0)
     return buf.getvalue()
+
+
+@pytest.fixture
+def table_pdf_bytes():
+    """One page with a bordered 2x3 table."""
+    from reportlab.platypus import SimpleDocTemplate, Table
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter)
+    data = [["H1", "H2"], ["1", "2"], ["3", "4"]]
+    t = Table(data, style=[("GRID", (0, 0), (-1, -1), 1, (0, 0, 0))])
+    doc.build([t])
+    buf.seek(0)
+    return buf.getvalue()

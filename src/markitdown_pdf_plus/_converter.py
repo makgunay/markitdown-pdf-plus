@@ -35,6 +35,21 @@ class PdfPlusConverter(DocumentConverter):
         image_dir = self.config.get("image_dir")
         fallback = self.config.get("table_fallback", True)
 
+        # full-page mode: render each page as a PNG and let the VLM transcribe it whole
+        if self.config.get("full_page") and self.vlm is not None:
+            import base64
+            from ._figures import _render_page_pil
+            pages_md = []
+            with pdfplumber.open(io.BytesIO(data)) as pdf:
+                n = len(pdf.pages)
+            for pi in range(n):
+                pil, _, _ = _render_page_pil(data, pi, dpi)
+                buf = io.BytesIO(); pil.save(buf, format="PNG")
+                b64 = base64.b64encode(buf.getvalue()).decode()
+                page_md = self.vlm._call(b64, self.vlm.table_prompt) or ""
+                pages_md.append(page_md)
+            return DocumentConverterResult(markdown="\n\n".join(pages_md).strip())
+
         lines = TextExtractor().extract(io.BytesIO(data))
         blocks: List[Block] = HeadingAnnotator().annotate(lines)
 

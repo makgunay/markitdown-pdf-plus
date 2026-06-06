@@ -55,7 +55,6 @@ class PdfPlusConverter(DocumentConverter):
 
         td = TableDetector()
         fx = FigureExtractor(image_dir=image_dir, dpi=dpi)
-        line_by_id = {id(b): b for b in blocks}
 
         with pdfplumber.open(io.BytesIO(data)) as pdf:
             for pi, page in enumerate(pdf.pages):

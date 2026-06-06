@@ -35,6 +35,36 @@ def table_pdf_bytes():
 
 
 @pytest.fixture
+def borderless_table_pdf_bytes():
+    """A table with NO ruling lines (text-aligned columns), like academic tables."""
+    from reportlab.platypus import SimpleDocTemplate, Table
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter)
+    data = [["Variable", "Mean", "SD"], ["Loan", "87.2", "108.0"],
+            ["Rate", "4.32", "2.13"], ["Maturity", "5.71", "2.53"]]
+    doc.build([Table(data)])  # no GRID style -> borderless
+    buf.seek(0)
+    return buf.getvalue()
+
+
+@pytest.fixture
+def prose_pdf_bytes():
+    """A page of flowing prose (no table) -- must NOT be detected as a table."""
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    c.setFont("Helvetica", 12)
+    y = 720
+    for line in [
+        "This is a paragraph of ordinary prose text that flows naturally across",
+        "the page without any tabular structure whatsoever, describing the study",
+        "and its motivation in complete sentences as a normal document would.",
+    ]:
+        c.drawString(72, y, line); y -= 18
+    c.showPage(); c.save(); buf.seek(0)
+    return buf.getvalue()
+
+
+@pytest.fixture
 def image_pdf_bytes(tmp_path):
     """One page containing a small embedded raster image."""
     from PIL import Image

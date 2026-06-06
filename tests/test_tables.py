@@ -9,3 +9,15 @@ def test_detects_table_region(table_pdf_bytes):
     assert len(bboxes) >= 1
     x0, top, x1, bottom = bboxes[0]
     assert x1 > x0 and bottom > top
+
+
+def test_detects_borderless_table(borderless_table_pdf_bytes):
+    with pdfplumber.open(io.BytesIO(borderless_table_pdf_bytes)) as pdf:
+        bboxes = TableDetector().detect(pdf.pages[0])
+    assert len(bboxes) >= 1
+
+
+def test_no_false_table_on_prose(prose_pdf_bytes):
+    with pdfplumber.open(io.BytesIO(prose_pdf_bytes)) as pdf:
+        bboxes = TableDetector().detect(pdf.pages[0])
+    assert len(bboxes) == 0

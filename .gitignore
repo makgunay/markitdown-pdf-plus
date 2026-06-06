@@ -6,3 +6,4 @@ build/
 dist/
 .venv/
 tests/_tmp/
+.DS_Store

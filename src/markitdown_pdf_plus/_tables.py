@@ -1,7 +1,14 @@
 from typing import List
 from ._model import BBox
 
-_TEXT_SETTINGS = {"vertical_strategy": "text", "horizontal_strategy": "text"}
+_TEXT_SETTINGS = {
+    "vertical_strategy": "text",
+    "horizontal_strategy": "text",
+    "snap_y_tolerance": 6,
+    "join_x_tolerance": 12,
+    "text_x_tolerance": 2,
+    "min_words_vertical": 2,
+}
 
 
 def _overlaps(a: BBox, b: BBox) -> bool:
@@ -32,7 +39,13 @@ class TableDetector:
         if not cells:
             return False
         long = sum(1 for c in cells if len(c) > 40)
-        return long / len(cells) <= 0.3
+        if long / len(cells) > 0.3:
+            return False
+        # Academic data tables are number-dense; prose that the permissive text
+        # strategy clusters into a "grid" is not. This is the key discriminator
+        # that lets us catch borderless tables without false-positiving on prose.
+        numeric = sum(1 for c in cells if any(ch.isdigit() for ch in c))
+        return numeric / len(cells) >= 0.25
 
     def extract_grid_markdown(self, page, bbox: BBox) -> str:
         """Fallback markdown when no VLM: pdfplumber's own extraction for the region."""

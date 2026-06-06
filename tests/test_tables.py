@@ -23,6 +23,16 @@ def test_no_false_table_on_prose(prose_pdf_bytes):
     assert len(bboxes) == 0
 
 
+def test_grid_fallback_renders_borderless_table(borderless_table_pdf_bytes):
+    """No-VLM fallback must render a borderless table as a grid, not empty."""
+    with pdfplumber.open(io.BytesIO(borderless_table_pdf_bytes)) as pdf:
+        page = pdf.pages[0]
+        bboxes = TableDetector().detect(page)
+        assert bboxes, "borderless table not detected"
+        md = TableDetector().extract_grid_markdown(page, bboxes[0])
+    assert "|" in md and md.count("\n") >= 2  # header + separator + >=1 row
+
+
 def test_real_paper_borderless_table_detected_prose_rejected():
     """Regression on a real academic PDF: the borderless summary-stats table
     (Table 1) must be detected, while a prose page must not false-positive."""

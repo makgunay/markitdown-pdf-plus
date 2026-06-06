@@ -48,9 +48,14 @@ class TableDetector:
         return numeric / len(cells) >= 0.25
 
     def extract_grid_markdown(self, page, bbox: BBox) -> str:
-        """Fallback markdown when no VLM: pdfplumber's own extraction for the region."""
+        """Fallback markdown when no VLM: pdfplumber's own extraction for the region.
+
+        Tries the ruled-line strategy first, then the text strategy, so borderless
+        academic tables (which detection finds via text alignment) still render a
+        grid -- messy but present -- instead of collapsing to flattened text.
+        """
         cropped = page.crop(bbox)
-        tables = cropped.extract_tables()
+        tables = cropped.extract_tables() or cropped.extract_tables(_TEXT_SETTINGS)
         if not tables or not tables[0]:
             return ""
         rows = [[c if c is not None else "" for c in row] for row in tables[0]]

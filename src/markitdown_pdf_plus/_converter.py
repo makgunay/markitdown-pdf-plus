@@ -71,9 +71,12 @@ class PdfPlusConverter(DocumentConverter):
                     cols = self._col_count(md)
                     blocks.append(Block(kind="table", page=pi, top=bbox[1], x0=bbox[0],
                                         markdown=md, bbox=bbox, cols=cols))
-                    # drop paragraph lines inside this table region
+                    # Drop the table's own text lines (paragraphs) inside this
+                    # region so its content isn't duplicated. Headings (e.g. the
+                    # "Table N. ..." caption) are kept -- the heading heuristic no
+                    # longer mis-tags table rows, so any heading here is a real one.
                     blocks = [b for b in blocks
-                              if not (b.kind in ("paragraph", "heading") and b.page == pi
+                              if not (b.kind == "paragraph" and b.page == pi
                                       and self._line_inside(b, bbox, lines))]
                 # figures
                 figs = fx.extract(page, pi, data)

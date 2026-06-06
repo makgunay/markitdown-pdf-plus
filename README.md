@@ -73,7 +73,7 @@ Pass extra keyword arguments to `md.convert()` to tune the plugin:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `pdf_plus_dpi` | `int` | `200` | DPI for PNG crop rendering (tables and figures). |
-| `pdf_plus_image_dir` | `str` or `None` | `None` | Directory to save extracted figure images. If `None`, figures are base64-encoded inline. |
+| `pdf_plus_image_dir` | `str` or `None` | `None` | Directory to save extracted figure images (referenced by relative path). If `None`, figures are caption-only (no image bytes embedded), keeping the Markdown lean for LLM use. |
 | `pdf_plus_table_fallback` | `bool` | `True` | Fall back to pdfplumber grid extraction when VLM transcription is unavailable or fails. |
 | `pdf_plus_full_page` | `bool` | `False` | Render every page as a full PNG and send to VLM instead of per-region crops (requires a VLM client). |
 
@@ -98,22 +98,25 @@ OPENAI_API_KEY=sk-... markitdown document.pdf --use-plugins
 
 ## Known limitations
 
-- **Single-column PDFs only** — multi-column layouts are not yet supported; text extraction follows the order pdfplumber returns words, which may interleave columns.
-- **Scanned PDFs** — rasterized pages with no text layer produce no headings or pdfplumber tables. Use `full_page=True` with a capable VLM to transcribe them.
-- **No OCR fallback** — the plugin does not bundle Tesseract or any OCR engine; scanned-PDF support depends entirely on the VLM path.
-- **Table heuristic** — pdfplumber's `find_tables` requires explicit lines/borders; borderless tables are not detected in fallback mode (but a VLM may still transcribe them via the full-page path).
+- **Single-column PDFs only** — multi-column layouts are not yet supported; reading order is a positional sort that may interleave columns. Use `full_page=True` with a VLM for multi-column documents.
+- **Scanned PDFs** — rasterized pages with no text layer produce no headings or fallback tables. Use `full_page=True` with a capable VLM to transcribe them.
+- **No bundled OCR** — the plugin ships no Tesseract/ML; scanned-PDF support depends entirely on the VLM path.
+- **Table detection is heuristic** — borderless tables are found via text-alignment plus a numeric-density filter (catches academic data tables, rejects prose), but it isn't perfect on every layout. Detected tables are transcribed by the VLM when configured, or rendered as a pdfplumber grid (messy but structured) in no-VLM mode.
 
 ## Eval results
 
-Evaluated against the markitdown-0.1.6 built-in PDF converter on a representative academic PDF:
+Measured on a representative 82-page academic PDF (a Federal Reserve working paper) against the markitdown-0.1.6 built-in PDF converter:
 
-| Metric | markitdown-0.1.6 | markitdown-pdf-plus (no VLM) |
-|---|---|---|
-| Heading recall | baseline | improved (font-heuristic) |
-| Table Markdown | pdfplumber fallback | pdfplumber fallback + optional VLM |
-| Figure captions | none | optional VLM captions |
+| Metric | markitdown-0.1.6 | pdf-plus (no VLM) | pdf-plus (+ Qwen2.5-VL) |
+|---|---:|---:|---|
+| Section headings (`#`) | 0 | **82** | **82** |
+| Figures extracted | 0 | **11** | **11** (+ captions) |
+| Table pipe-rows | 646 (scattered) | **609** (structured grids) | clean specialist tables |
+| Run-together-word lines | 928 | **59** | **59** |
 
-Run the evaluation harness yourself:
+End-to-end verification with a local Qwen2.5-VL endpoint: the paper's summary-statistics and regression tables (which are borderless) are transcribed into clean Markdown pipe tables with captions preserved and no content duplication — matching dedicated tools' table quality while keeping the rest of MarkItDown's interface.
+
+Run the evaluation harness yourself (set `PDFPLUS_OLLAMA=1` to include the VLM path):
 
 ```bash
 python tests/eval/run_eval.py

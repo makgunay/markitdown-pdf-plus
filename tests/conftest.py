@@ -32,3 +32,18 @@ def table_pdf_bytes():
     doc.build([t])
     buf.seek(0)
     return buf.getvalue()
+
+
+@pytest.fixture
+def image_pdf_bytes(tmp_path):
+    """One page containing a small embedded raster image."""
+    from PIL import Image
+    img_path = tmp_path / "blue.png"
+    Image.new("RGB", (120, 80), (0, 0, 255)).save(img_path)
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    c.drawImage(str(img_path), 100, 500, width=120, height=80)
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return buf.getvalue()

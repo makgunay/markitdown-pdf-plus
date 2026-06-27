@@ -5,6 +5,12 @@
 `tools/markitdown/` (`routed_detect.py` → `routed_vlm_{qwen,nanonets}.py` → `routed_assemble.py`,
 outputs in `tools/markitdown/routed/`) and are re-runnable. **None of this touched the v0.1.0 plugin.**
 
+> **Reframed 2026-06-27 by [05-mistral-ocr-4-assessment.md](05-mistral-ocr-4-assessment.md).** Mistral
+> OCR 4 (cloud, SOTA, ~$0.33/paper) closes tables + equations + multi-column in one call, so the
+> TATR-routed hybrid is no longer "*the* table answer" — it's the **local/offline/private** table
+> answer. Likely v0.2 framing: a Mistral cloud backend as the headline (less work, bigger jump), with
+> this TATR work as the local tier. Read doc 05 before resuming here.
+
 ## The idea: structure-model-first, VLM-optional
 
 Move the plugin from VLM-first to the architecture the serious tools use (Docling/Marker/MinerU):

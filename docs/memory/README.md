@@ -10,6 +10,7 @@ the reasoning that the code and git history don't capture.
 | [02-research-and-benchmarks.md](02-research-and-benchmarks.md) | The full measured scoreboard (11 approaches on the same 82-page paper), the tooling research (Marker, OCR specialists, TATR/OTSL/TEDS), and what each experiment proved. |
 | [03-build-findings.md](03-build-findings.md) | Hard-won findings the unit tests missed — the borderless-table fix, the pdfminer spacing fix, the heading-heuristic tightening, env conflicts, and the load-bearing lesson. |
 | [04-roadmap-v0.2-tatr.md](04-roadmap-v0.2-tatr.md) | The parked TATR-routed hybrid (measured, not yet shipped): architecture, results, dependency cost, and the exact next steps when work resumes. |
+| [05-mistral-ocr-4-assessment.md](05-mistral-ocr-4-assessment.md) | Fit assessment of Mistral OCR 4 (cloud, SOTA) as an opt-in backend — how it maps onto the plugin, scoreboard impact, and why it reframes the v0.2 roadmap. |
 
 ## Companion docs (elsewhere in the repo)
 

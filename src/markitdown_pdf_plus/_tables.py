@@ -1,4 +1,5 @@
-from typing import List
+from typing import Any
+
 from ._model import BBox
 
 _TEXT_SETTINGS = {
@@ -18,8 +19,8 @@ def _overlaps(a: BBox, b: BBox) -> bool:
 
 
 class TableDetector:
-    def detect(self, page) -> List[BBox]:
-        found: List[BBox] = [tuple(t.bbox) for t in page.find_tables()]  # ruled tables
+    def detect(self, page: Any) -> list[BBox]:
+        found: list[BBox] = [tuple(t.bbox) for t in page.find_tables()]  # ruled tables
         for t in page.find_tables(_TEXT_SETTINGS):  # borderless / text-aligned
             bbox = tuple(t.bbox)
             if any(_overlaps(bbox, f) for f in found):
@@ -29,7 +30,7 @@ class TableDetector:
         return found
 
     @staticmethod
-    def _looks_like_table(table) -> bool:
+    def _looks_like_table(table: Any) -> bool:
         rows = [r for r in table.extract() if any((c or "").strip() for c in r)]
         if len(rows) < 3:
             return False
@@ -47,7 +48,7 @@ class TableDetector:
         numeric = sum(1 for c in cells if any(ch.isdigit() for ch in c))
         return numeric / len(cells) >= 0.25
 
-    def extract_grid_markdown(self, page, bbox: BBox) -> str:
+    def extract_grid_markdown(self, page: Any, bbox: BBox) -> str:
         """Fallback markdown when no VLM: pdfplumber's own extraction for the region.
 
         Tries the ruled-line strategy first, then the text strategy, so borderless

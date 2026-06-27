@@ -1,6 +1,6 @@
 # tests/test_headings.py
-from markitdown_pdf_plus._model import Line
 from markitdown_pdf_plus._headings import HeadingAnnotator
+from markitdown_pdf_plus._model import Line
 
 
 def _ln(text, size, page=0, top=0.0, bold=False):

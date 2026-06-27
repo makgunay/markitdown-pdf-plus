@@ -1,0 +1,60 @@
+name: Bug report
+description: Report incorrect or unexpected Markdown output from the plugin
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please include enough detail to reproduce it.
+        Do **not** attach confidential PDFs; a minimal/redacted sample is ideal.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did the plugin output, and what did you expect instead?
+      placeholder: e.g. "A borderless summary-stats table collapsed into flattened prose."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact code/CLI you ran.
+      render: python
+      placeholder: |
+        from markitdown import MarkItDown
+        md = MarkItDown(enable_plugins=True)
+        print(md.convert("sample.pdf").text_content)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Conversion mode
+      options:
+        - No VLM (font headings + pdfplumber tables)
+        - With a VLM client (tables/captions)
+        - full_page VLM mode
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: markitdown-pdf-plus, markitdown, and Python versions.
+      placeholder: "pdf-plus 0.1.0, markitdown 0.1.6, Python 3.12"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: VLM model/endpoint (if any), document characteristics, logs, etc.
+    validations:
+      required: false

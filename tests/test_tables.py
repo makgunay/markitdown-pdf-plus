@@ -1,5 +1,7 @@
 import io
+
 import pdfplumber
+
 from markitdown_pdf_plus._tables import TableDetector
 
 

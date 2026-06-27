@@ -1,6 +1,8 @@
 # tests/test_figures.py
 import io
+
 import pdfplumber
+
 from markitdown_pdf_plus._figures import FigureExtractor, render_bbox_png_b64
 
 
@@ -19,5 +21,6 @@ def test_extracts_figure_block(image_pdf_bytes, tmp_path):
 def test_render_bbox_returns_base64_png(image_pdf_bytes):
     b64 = render_bbox_png_b64(image_pdf_bytes, page_index=0, bbox=(100, 500, 220, 580), dpi=100)
     import base64
+
     raw = base64.b64decode(b64)
     assert raw[:8] == b"\x89PNG\r\n\x1a\n"

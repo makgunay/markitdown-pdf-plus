@@ -1,0 +1,41 @@
+version: 2
+updates:
+  # Python runtime + dev/test dependencies declared in pyproject.toml.
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    # Wait before adopting a fresh release to dodge yanked/broken versions
+    # (also feeds the min_release_age policy).
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "deps"
+
+  # Versions of the actions used in .github/workflows.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "ci"

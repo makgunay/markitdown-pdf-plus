@@ -1,6 +1,6 @@
 # tests/test_assemble.py
-from markitdown_pdf_plus._model import Block
 from markitdown_pdf_plus._assemble import MarkdownAssembler
+from markitdown_pdf_plus._model import Block
 
 
 def test_orders_by_position_and_renders_each_kind():

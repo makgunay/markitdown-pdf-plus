@@ -4,8 +4,8 @@ Usage:
   ../markitdown/.venv/bin/python tests/eval/run_eval.py            # no VLM (structure only)
   PDFPLUS_OLLAMA=1 ../markitdown/.venv/bin/python tests/eval/run_eval.py   # + Qwen via Ollama
 """
+
 import os
-import re
 import sys
 
 PDF = "../markitdown/2025059pap.pdf"
@@ -13,10 +13,10 @@ PDF = "../markitdown/2025059pap.pdf"
 
 def metrics(md: str) -> dict:
     lines = md.splitlines()
-    runtogether = sum(1 for l in lines if any(len(w) >= 18 for w in l.split()))
+    runtogether = sum(1 for ln in lines if any(len(w) >= 18 for w in ln.split()))
     return {
-        "headings": sum(1 for l in lines if l.startswith("#")),
-        "pipe_rows": sum(1 for l in lines if l.strip().startswith("|")),
+        "headings": sum(1 for ln in lines if ln.startswith("#")),
+        "pipe_rows": sum(1 for ln in lines if ln.strip().startswith("|")),
         "figures": md.count("!["),
         "runtogether_lines": runtogether,
         "chars": len(md),
@@ -25,9 +25,11 @@ def metrics(md: str) -> dict:
 
 def main():
     from markitdown import MarkItDown
+
     kwargs = {"enable_builtins": True, "enable_plugins": True, "pdf_plus_image_dir": "tests/_tmp/figs"}
     if os.getenv("PDFPLUS_OLLAMA"):
         from openai import OpenAI
+
         kwargs["llm_client"] = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
         kwargs["llm_model"] = "qwen2.5vl:7b"
 

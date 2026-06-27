@@ -1,0 +1,62 @@
+{
+  "name": "markitdown-pdf-plus",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000"
+    },
+    "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+      "plugins": "git zsh-autosuggestions zsh-syntax-highlighting",
+      "omzPlugins": "https://github.com/zdharma-continuum/fast-syntax-highlighting.git"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.terminal.activateEnvironment": false,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
+        },
+        "ruff.lineLength": 110,
+        "ruff.lint.enable": true,
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/.pytest_cache": true,
+          "**/.mypy_cache": true,
+          "**/.ruff_cache": true,
+          "**/*.egg-info": true,
+          "**/dist": true,
+          "**/build": true
+        }
+      }
+    }
+  },
+  "postCreateCommand": "pip install --upgrade pip && pip install -e \".[test,dev]\" && pre-commit install",
+  "postStartCommand": "echo 'markitdown-pdf-plus dev container ready. Run: pytest -q  |  ruff check src tests  |  mypy'",
+  "remoteEnv": {
+    "PYTHONPATH": "${containerWorkspaceFolder}/src:${containerEnv:PYTHONPATH}"
+  },
+  "forwardPorts": [],
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-venv,target=/home/vscode/.venv,type=volume"
+  ]
+}

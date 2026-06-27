@@ -1,10 +1,9 @@
 from collections import Counter
-from typing import List
 
-from ._model import Line, Block
+from ._model import Block, Line
 
 
-def body_font_size(lines: List[Line]) -> float:
+def body_font_size(lines: list[Line]) -> float:
     sizes = Counter(round(ln.font_size, 1) for ln in lines if ln.text.strip())
     return sizes.most_common(1)[0][0] if sizes else 12.0
 
@@ -26,17 +25,26 @@ def heading_level(line: Line, body: float) -> int:
 
 
 class HeadingAnnotator:
-    def annotate(self, lines: List[Line]) -> List[Block]:
+    def annotate(self, lines: list[Line]) -> list[Block]:
         body = body_font_size(lines)
-        blocks: List[Block] = []
+        blocks: list[Block] = []
         for ln in lines:
             if not ln.text.strip():
                 continue
             lvl = heading_level(ln, body)
             if lvl:
-                blocks.append(Block(kind="heading", page=ln.page, top=ln.bbox[1],
-                                    x0=ln.bbox[0], text=ln.text.strip(), level=lvl))
+                blocks.append(
+                    Block(
+                        kind="heading",
+                        page=ln.page,
+                        top=ln.bbox[1],
+                        x0=ln.bbox[0],
+                        text=ln.text.strip(),
+                        level=lvl,
+                    )
+                )
             else:
-                blocks.append(Block(kind="paragraph", page=ln.page, top=ln.bbox[1],
-                                    x0=ln.bbox[0], text=ln.text.strip()))
+                blocks.append(
+                    Block(kind="paragraph", page=ln.page, top=ln.bbox[1], x0=ln.bbox[0], text=ln.text.strip())
+                )
         return blocks

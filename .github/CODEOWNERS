@@ -1,0 +1,14 @@
+# Code ownership for markitdown-pdf-plus.
+# These owners are requested for review automatically on PRs touching the paths.
+
+# Default owner for everything not matched below.
+*                               @makgunay
+
+# Core conversion pipeline (the single-purpose stages + orchestrator).
+/src/markitdown_pdf_plus/        @makgunay
+
+# CI, release, security, and dependency automation.
+/.github/                        @makgunay
+
+# Tests and the real-document eval harness.
+/tests/                          @makgunay

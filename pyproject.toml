@@ -12,15 +12,115 @@ requires-python = ">=3.10"
 dependencies = [
   "markitdown>=0.1.5",
   "pdfplumber>=0.11",
+  "pdfminer.six>=20220524",
   "pypdfium2>=4",
   "Pillow>=10",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8", "reportlab>=4"]
+test = ["pytest>=8", "reportlab>=4", "pytest-cov>=5", "pytest-randomly>=3.15", "pytest-rerunfailures>=14", "pytest-xdist>=3.5"]
+dev = ["ruff>=0.6", "mypy>=1.11", "pre-commit>=3.7", "vulture>=2.11", "deptry>=0.20"]
 
 [project.entry-points."markitdown.plugin"]
 pdf_plus = "markitdown_pdf_plus"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/markitdown_pdf_plus"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 110
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort (import ordering)
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "SIM",  # flake8-simplify
+  "C4",   # flake8-comprehensions
+  "N",    # pep8-naming (naming consistency)
+  "C901", # mccabe cyclomatic complexity
+  "TD",   # flake8-todos (tech-debt markers must be tracked/linked)
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E501"]
+# Vulture whitelist intentionally lists bare names/attributes to mark them used.
+"vulture_whitelist.py" = ["B018", "F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+# Only type-check our own src/; treat all third-party imports as Any rather
+# than descending into installed stubs. Keeps the check environment-independent
+# (some transitive deps, e.g. numpy, ship py.typed stubs using newer syntax).
+follow_imports = "skip"
+files = ["src"]
+# We extend MarkItDown's DocumentConverter, which ships no type info; allow
+# subclassing it without losing strictness elsewhere.
+disallow_subclassing_any = false
+# Third-party libraries that ship no type information.
+[[tool.mypy.overrides]]
+module = [
+  "pdfplumber.*",
+  "pdfminer.*",
+  "pypdfium2.*",
+  "markitdown.*",
+]
+ignore_missing_imports = true
+
+[tool.vulture]
+paths = ["src", "vulture_whitelist.py"]
+min_confidence = 70
+
+[tool.deptry]
+# The `test` and `dev` extras hold tooling/test-only packages that are never
+# imported by the shipped library, so they must not be flagged as unused.
+optional_dependencies_dev_groups = ["test", "dev"]
+extend_exclude = ["vulture_whitelist.py"]
+# Helper scripts in scripts/ import the project's own package; treat it as
+# first-party so it isn't mistaken for an undeclared transitive dependency.
+known_first_party = ["markitdown_pdf_plus"]
+
+[tool.deptry.per_rule_ignores]
+# Pillow is a real runtime requirement: pypdfium2's `.to_pil()` needs it, but we
+# never `import PIL` directly in src, so deptry can't see the usage.
+DEP002 = ["Pillow"]
+
+[tool.pytest.ini_options]
+# Test discovery: standard test_*.py / *_test.py naming, tests/ dir.
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Exclude the live-VLM integration test and the eval harness from the default
+# suite (they need a running Ollama endpoint / a real PDF fixture).
+addopts = "--ignore=tests/test_integration.py --ignore=tests/eval --durations=10"
+
+[tool.coverage.run]
+source = ["src/markitdown_pdf_plus"]
+branch = true
+
+[tool.coverage.report]
+# Fail the suite if coverage drops below this floor. Measured baseline with
+# branch coverage on is ~90% (the real-paper tests self-skip in CI without
+# changing the number); 88 leaves a couple of points of headroom while still
+# catching real regressions.
+fail_under = 88
+show_missing = true
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+]

@@ -1,6 +1,8 @@
-from typing import List
+from typing import Any, BinaryIO, cast
+
 from pdfminer.high_level import extract_pages
-from pdfminer.layout import LTTextContainer, LTTextLine, LTChar
+from pdfminer.layout import LTChar, LTTextContainer, LTTextLine
+
 from ._model import Line
 
 
@@ -13,9 +15,9 @@ class TextExtractor:
     'top' to match the pdfplumber bboxes used by table/figure detection.
     """
 
-    def extract(self, file_stream) -> List[Line]:
-        out: List[Line] = []
-        for page_index, layout in enumerate(extract_pages(file_stream)):
+    def extract(self, file_stream: BinaryIO) -> list[Line]:
+        out: list[Line] = []
+        for page_index, layout in enumerate(extract_pages(cast("Any", file_stream))):
             page_height = layout.height
             for element in layout:
                 if not isinstance(element, LTTextContainer):
@@ -36,6 +38,13 @@ class TextExtractor:
                     x1 = max(c.x1 for c in chars)
                     y0 = min(c.y0 for c in chars)
                     y1 = max(c.y1 for c in chars)
-                    out.append(Line(page=page_index, text=text, font_size=round(size, 1),
-                                    bold=bold, bbox=(x0, page_height - y1, x1, page_height - y0)))
+                    out.append(
+                        Line(
+                            page=page_index,
+                            text=text,
+                            font_size=round(size, 1),
+                            bold=bold,
+                            bbox=(x0, page_height - y1, x1, page_height - y0),
+                        )
+                    )
         return out

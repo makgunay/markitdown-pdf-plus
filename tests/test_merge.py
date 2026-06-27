@@ -1,5 +1,5 @@
-from markitdown_pdf_plus._model import Block
 from markitdown_pdf_plus._merge import CrossPageTableMerger
+from markitdown_pdf_plus._model import Block
 
 T1 = "| a | b |\n| - | - |\n| 1 | 2 |"
 T2 = "| a | b |\n| - | - |\n| 3 | 4 |"

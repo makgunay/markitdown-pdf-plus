@@ -1,5 +1,5 @@
 # tests/test_model.py
-from markitdown_pdf_plus._model import Line, Block
+from markitdown_pdf_plus._model import Block, Line
 
 
 def test_line_fields():

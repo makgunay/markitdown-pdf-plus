@@ -1,9 +1,33 @@
+# Python
 __pycache__/
 *.pyc
 *.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
 build/
 dist/
 .venv/
+venv/
 tests/_tmp/
+
+# Secrets / local environment (never commit real .env; .env.example is tracked)
+.env
+.env.*
+!.env.example
+
+# Editor / IDE
+.idea/
+.vscode/
+
+# Node (used only by the jscpd duplication check via npx)
+node_modules/
+
+# OS
 .DS_Store
+Thumbs.db

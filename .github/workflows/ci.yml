@@ -1,6 +1,37 @@
 name: ci
 on: [push, pull_request]
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pre-commit run --all-files --show-diff-on-failure
+      - name: Unused / missing / transitive dependency check
+        run: deptry .
+  duplication:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npx --yes jscpd@4
+  docs:
+    # Auto-generated API reference must stay in sync + AGENTS.md/CLAUDE.md links
+    # and documented tools must remain valid.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev,test]"
+      - run: python scripts/gen_api_docs.py --check
+      - run: python scripts/validate_docs.py
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -12,4 +43,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[test]"
-      - run: python -m pytest -v --ignore=tests/test_integration.py --ignore=tests/eval
+      - run: python -m pytest -v --cov --cov-report=term-missing
+  flaky:
+    # Re-run any failing tests up to 2x to surface intermittently failing ones.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test]"
+      - run: python -m pytest -v --reruns 2 --reruns-delay 1 -r fR

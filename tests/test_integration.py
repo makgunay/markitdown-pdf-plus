@@ -1,6 +1,7 @@
 # tests/test_integration.py
 import io
 import os
+
 import pytest
 
 pytestmark = pytest.mark.skipif(
@@ -9,11 +10,12 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_qwen_transcribes_table(table_pdf_bytes):
-    from openai import OpenAI
-    from markitdown_pdf_plus._vlm import VlmService
-    from markitdown_pdf_plus._figures import render_bbox_png_b64
     import pdfplumber
+    from openai import OpenAI
+
+    from markitdown_pdf_plus._figures import render_bbox_png_b64
     from markitdown_pdf_plus._tables import TableDetector
+    from markitdown_pdf_plus._vlm import VlmService
 
     with pdfplumber.open(io.BytesIO(table_pdf_bytes)) as pdf:
         bbox = TableDetector().detect(pdf.pages[0])[0]

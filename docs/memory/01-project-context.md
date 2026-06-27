@@ -20,7 +20,7 @@ Plus always-on figure extraction, opt-in cross-page table merging, and opt-in fi
 **Graceful degradation is a core principle:** useful output at every capability level, never worse
 than the built-in converter.
 
-- **Published:** https://github.com/makgunay/markitdown-pdf-plus — `main`, **v0.1.0** released (CI green).
+- **Published:** https://github.com/Akgunay-Labs/markitdown-pdf-plus — `main`, **v0.1.0** released (CI green).
 - **License:** MIT · **Python:** ≥3.10 · no bundled ML weights.
 
 ## Origin story (how we arrived at "build a plugin")

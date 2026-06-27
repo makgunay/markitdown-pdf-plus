@@ -1,9 +1,11 @@
 """markitdown-pdf-plus: enhanced PDF converter plugin for MarkItDown."""
 
+from typing import Any
+
 __plugin_interface_version__ = 1
 
 
-def register_converters(markitdown, **kwargs):
+def register_converters(markitdown: Any, **kwargs: Any) -> None:
     """Entry point called by MarkItDown when plugins are enabled."""
     from ._converter import PdfPlusConverter
     from ._vlm import build_vlm_service

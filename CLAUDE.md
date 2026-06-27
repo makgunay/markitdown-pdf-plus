@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **overrides the built-in PDF converter** (priority −1.0). It adds always-on font-heuristic headings
 and figure extraction, plus opt-in, model-agnostic VLM table transcription, cross-page table merging,
 and figure captioning. MIT, Python ≥3.10, no bundled ML. Published at
-https://github.com/makgunay/markitdown-pdf-plus (`main`, v0.1.0).
+https://github.com/Akgunay-Labs/markitdown-pdf-plus (`main`, v0.1.0).
 
 **Core principle: graceful degradation.** Useful output at every capability tier, never worse than
 the built-in converter. No `llm_client` → font headings + pdfplumber tables + uncaptioned figures.
@@ -21,10 +21,46 @@ deps). There is no venv in this repo.
 
 ```bash
 # One-time: install editable into the sibling venv
-../markitdown/.venv/bin/pip install -e ".[test]"
+../markitdown/.venv/bin/pip install -e ".[test,dev]"
+
+# Lint / format / type-check (configs live in pyproject.toml)
+ruff check src tests
+ruff check src tests --fix     # auto-fix the safe ones
+ruff format src tests          # apply the formatter (Black-compatible)
+ruff format --check src tests  # verify formatting
+../markitdown/.venv/bin/python -m mypy   # strict type-check of src/
+
+# Dead code + duplication + dependency hygiene (also wired into pre-commit / CI)
+../markitdown/.venv/bin/python -m vulture   # dead code (whitelist: vulture_whitelist.py)
+npx --yes jscpd@4                            # copy-paste detection (.jscpd.json)
+../markitdown/.venv/bin/python -m deptry .   # unused / missing / transitive deps
+
+# Auto-generated docs + AGENTS.md freshness (CI `docs` job enforces both)
+../markitdown/.venv/bin/python scripts/gen_api_docs.py        # regenerate docs/API.md
+../markitdown/.venv/bin/python scripts/gen_api_docs.py --check # fail if committed copy is stale
+../markitdown/.venv/bin/python scripts/validate_docs.py        # AGENTS.md/CLAUDE.md links + tools
+
+# Pre-commit hooks (ruff + ruff-format + mypy + vulture + large-file/secret checks).
+# CI runs `pre-commit run --all-files` plus a jscpd duplication job; install locally with:
+pre-commit install
+pre-commit run --all-files
+
+# Dev container (reproducible env: Python 3.12 + all test/dev tooling).
+# Builds and starts the container defined in .devcontainer/devcontainer.json:
+npx --yes @devcontainers/cli up --workspace-folder .
+npx --yes @devcontainers/cli exec --workspace-folder . bash -lc "pytest -q"   # run anything inside
 
 # Full offline suite (what CI runs)
 ../markitdown/.venv/bin/python -m pytest -v --ignore=tests/test_integration.py --ignore=tests/eval
+
+# Same suite with the coverage gate enforced (branch coverage; ~90% baseline, 88% floor)
+../markitdown/.venv/bin/python -m pytest -q --cov --cov-report=term-missing
+
+# Test isolation / flakiness tooling (plugins in the `test` extra)
+# - order is randomized each run (pytest-randomly) to catch hidden coupling;
+#   reproduce a failure with the seed printed at the top of the run.
+# - parallel:  ../markitdown/.venv/bin/python -m pytest -n auto
+# - flaky hunt: ../markitdown/.venv/bin/python -m pytest --reruns 2 --reruns-delay 1
 
 # A single test
 ../markitdown/.venv/bin/python -m pytest tests/test_tables.py::test_detects_table_region -v
@@ -113,3 +149,13 @@ Read these for the reasoning the code doesn't capture — start with `docs/memor
 - Fail soft: never abort a document over one bad crop/call. The VLM path catches per-call and falls
   back; keep that contract.
 - TDD + frequent commits, matching the existing history.
+
+## Dependency update policy
+
+- Updates are automated via Dependabot (`.github/dependabot.yml`) for both the `pip` and
+  `github-actions` ecosystems, grouped and opened weekly.
+- **Minimum release age:** do not merge a dependency bump until the target release is at least
+  **7 days old** (**14 days** for a major version). This guards against yanked or
+  broken-on-release versions and supply-chain attacks that are caught and pulled shortly after
+  publication. The waiting period is enforced automatically by the Dependabot `cooldown` setting,
+  so Dependabot will not even open the PR until the window has elapsed.

@@ -1,11 +1,10 @@
-from typing import List
 from ._model import Block
 
 
 class MarkdownAssembler:
-    def assemble(self, blocks: List[Block]) -> str:
+    def assemble(self, blocks: list[Block]) -> str:
         ordered = sorted(blocks, key=lambda b: (b.page, b.top, b.x0))
-        parts: List[str] = []
+        parts: list[str] = []
         for b in ordered:
             parts.append(self._render(b))
         return "\n\n".join(p for p in parts if p.strip())

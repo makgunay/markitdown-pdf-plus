@@ -3,22 +3,29 @@ from markitdown_pdf_plus._vlm import VlmService, build_vlm_service
 
 
 class _Msg:
-    def __init__(self, content): self.message = type("M", (), {"content": content})
+    def __init__(self, content):
+        self.message = type("M", (), {"content": content})
 
 
 class _Resp:
-    def __init__(self, content): self.choices = [_Msg(content)]
+    def __init__(self, content):
+        self.choices = [_Msg(content)]
 
 
 class MockClient:
-    def __init__(self, content): self._content = content
+    def __init__(self, content):
+        self._content = content
+
     @property
     def chat(self):
         outer = self
+
         class C:
-            class completions:
+            class completions:  # noqa: N801  mirrors openai client.chat.completions
                 @staticmethod
-                def create(**kwargs): return _Resp(outer._content)
+                def create(**kwargs):
+                    return _Resp(outer._content)
+
         return C
 
 
@@ -40,6 +47,8 @@ def test_transcribe_rejects_non_table():
 def test_failure_returns_none():
     class Boom:
         @property
-        def chat(self): raise RuntimeError("network")
+        def chat(self):
+            raise RuntimeError("network")
+
     svc = VlmService(Boom(), "m")
     assert svc.transcribe_table("BASE64") is None

@@ -1,17 +1,16 @@
-from typing import List
 from ._model import Block
 
 
-def _data_rows(md: str) -> List[str]:
+def _data_rows(md: str) -> list[str]:
     """Return only the body rows (skip header + separator)."""
     rows = [r for r in md.splitlines() if r.strip().startswith("|")]
     return rows[2:] if len(rows) >= 2 else rows
 
 
 class CrossPageTableMerger:
-    def merge(self, blocks: List[Block]) -> List[Block]:
+    def merge(self, blocks: list[Block]) -> list[Block]:
         ordered = sorted(blocks, key=lambda b: (b.page, b.top, b.x0))
-        out: List[Block] = []
+        out: list[Block] = []
         for b in ordered:
             prev = out[-1] if out else None
             if (

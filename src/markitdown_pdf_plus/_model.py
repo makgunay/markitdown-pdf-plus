@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
-BBox = Tuple[float, float, float, float]  # (x0, top, x1, bottom), PDF points
+BBox = tuple[float, float, float, float]  # (x0, top, x1, bottom), PDF points
 
 
 @dataclass
@@ -22,7 +21,7 @@ class Block:
     text: str = ""
     level: int = 0
     markdown: str = ""
-    image_path: Optional[str] = None
-    caption: Optional[str] = None
-    bbox: Optional[BBox] = None
+    image_path: str | None = None
+    caption: str | None = None
+    bbox: BBox | None = None
     cols: int = 0

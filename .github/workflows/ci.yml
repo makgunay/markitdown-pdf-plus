@@ -42,7 +42,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[test]"
+      - run: pip install -e ".[test,eval]"
       - run: python -m pytest -v --cov --cov-report=term-missing
   flaky:
     # Re-run any failing tests up to 2x to surface intermittently failing ones.
@@ -52,5 +52,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[test]"
+      - run: pip install -e ".[test,eval]"
       - run: python -m pytest -v --reruns 2 --reruns-delay 1 -r fR

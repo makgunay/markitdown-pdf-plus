@@ -17,11 +17,72 @@ Entry point called by MarkItDown when plugins are enabled.
 
 _Undocumented._
 
+## `markitdown_pdf_plus._backends`
+
+Selectable conversion backends.
+
+Each backend turns raw PDF bytes into a Markdown string. The default ``LocalBackend``
+runs the always-on, MIT-clean local pipeline (pdfminer text + font headings +
+pdfplumber/VLM tables + figures). Optional backends route the whole document through
+a SOTA full-document model (cloud or local) for higher quality and lower latency.
+
+### class `Backend(*args, **kwargs)`
+
+Base class for protocol classes.
+
+Protocol classes are defined as::
+
+    class Proto(Protocol):
+        def meth(self) -> int:
+            ...
+
+Such classes are primarily used with static type checkers that recognize
+structural subtyping (static duck-typing).
+
+For example::
+
+    class C:
+        def meth(self) -> int:
+            return 0
+
+    def func(x: Proto) -> int:
+        return x.meth()
+
+    func(C())  # Passes static type check
+
+See PEP 544 for details. Protocol classes decorated with
+@typing.runtime_checkable act as simple-minded runtime protocols that check
+only the presence of given attributes, ignoring their type signatures.
+Protocol classes can be generic, they are defined as::
+
+    class GenProto[T](Protocol):
+        def meth(self) -> T:
+            ...
+
+### class `LocalBackend(vlm: Any, config: dict[str, typing.Any])`
+
+The always-on local pipeline. ``vlm`` is optional (None → grids + uncaptioned figures).
+
+### func `build_backend(vlm: Any, config: dict[str, typing.Any]) -> markitdown_pdf_plus._backends.Backend`
+
+Select a backend by ``config['backend']`` (default ``'local'``).
+
+## `markitdown_pdf_plus._concurrency`
+
+### func `map_ordered(fn: collections.abc.Callable[[~_T], ~_R], items: collections.abc.Sequence[~_T], concurrency: int) -> list[~_R]`
+
+Apply ``fn`` over ``items`` preserving input order.
+
+Runs concurrently in a thread pool when it helps (``concurrency`` > 1 and more
+than one item); otherwise sequentially. The VLM/OCR calls are I/O-bound network
+requests, so threads overlap their latency. ``fn`` must be fail-soft (the VLM
+methods catch their own exceptions and return ``None``).
+
 ## `markitdown_pdf_plus._converter`
 
 ### class `PdfPlusConverter(vlm: Any, config: dict[str, typing.Any])`
 
-Abstract superclass of all DocumentConverters.
+Thin MarkItDown converter: accepts PDFs and delegates to a selectable backend.
 
 ## `markitdown_pdf_plus._extract`
 
@@ -44,6 +105,13 @@ _Undocumented._
 
 _Undocumented._
 
+### func `render_pages_b64(pdf_bytes: bytes, dpi: int = 200) -> list[str]`
+
+Render every page to a base64-encoded PNG, opening the document once.
+
+Sequential on purpose: pypdfium2 is kept single-threaded. Shared by the
+whole-page backends (local full_page, paddleocr_vl).
+
 ## `markitdown_pdf_plus._headings`
 
 ### class `HeadingAnnotator()`
@@ -64,6 +132,29 @@ Return heading level 1-3, or 0 if not a heading.
 
 _Undocumented._
 
+## `markitdown_pdf_plus._mistral`
+
+Mistral OCR 4 cloud backend (opt-in).
+
+Routes the whole PDF through Mistral's dedicated ``/v1/ocr`` document model, which
+returns structured per-page Markdown (tables as markdown/HTML, equations, figure
+bounding boxes) in one call. This closes the two gaps the local heuristic path
+cannot: equations->LaTeX and multi-column reading order.
+
+Privacy note: this sends the document to a third-party cloud API. It is opt-in
+(``pdf_plus_backend="mistral_ocr"``), never the default.
+
+No new runtime dependency: the HTTP call uses the standard library so the backend
+works without installing an SDK. Set ``pdf_plus_mistral_api_key`` or ``MISTRAL_API_KEY``.
+
+### class `MistralOcrBackend(config: dict[str, typing.Any], poster: collections.abc.Callable[[str, dict[str, typing.Any], dict[str, str], float], dict[str, typing.Any]] | None = None)`
+
+Convert a PDF via the Mistral OCR document API. ``poster`` is injectable for tests.
+
+### class `MistralOcrError(...)`
+
+Unspecified run-time error.
+
 ## `markitdown_pdf_plus._model`
 
 ### class `Block(kind: str, page: int, top: float, x0: float = 0.0, text: str = '', level: int = 0, markdown: str = '', image_path: str | None = None, caption: str | None = None, bbox: tuple[float, float, float, float] | None = None, cols: int = 0) -> None`
@@ -73,6 +164,26 @@ Block(kind: str, page: int, top: float, x0: float = 0.0, text: str = '', level: 
 ### class `Line(page: int, text: str, font_size: float, bold: bool, bbox: tuple[float, float, float, float]) -> None`
 
 Line(page: int, text: str, font_size: float, bold: bool, bbox: tuple[float, float, float, float])
+
+## `markitdown_pdf_plus._paddleocr`
+
+PaddleOCR-VL / dots.ocr local full-document VLM backend (opt-in).
+
+Routes the whole document through a local, OpenAI-compatible document-parsing VLM
+(e.g. PaddleOCR-VL served via ``mlx_vlm.server`` on Apple Silicon, or vLLM on a GPU).
+Each page is rendered to a PNG and sent to the endpoint, which returns structured
+Markdown with tables, equations, and reading order in one pass per page.
+
+This is the local, free, private SOTA tier. Unlike the Mistral cloud backend, no
+document leaves the machine. Unlike the ``local`` backend's region-crop table path,
+it closes the equations and multi-column gaps a heuristic pipeline cannot.
+
+Requires an ``llm_client``/``llm_model`` pointing at a doc-parsing VLM endpoint.
+No new core dependency -- it reuses the existing OpenAI-compatible ``VlmService``.
+
+### class `PaddleOcrBackend(vlm: Any, config: dict[str, typing.Any])`
+
+Whole-document page-by-page VLM transcription using a local doc-parsing endpoint.
 
 ## `markitdown_pdf_plus._tables`
 

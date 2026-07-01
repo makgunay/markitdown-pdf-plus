@@ -1,9 +1,11 @@
 # tests/test_converter.py
 import io
+import threading
 
 from markitdown import StreamInfo
 from tests.test_vlm import MockClient
 
+from markitdown_pdf_plus._concurrency import map_ordered
 from markitdown_pdf_plus._converter import PdfPlusConverter
 from markitdown_pdf_plus._vlm import VlmService
 
@@ -59,3 +61,37 @@ def test_full_page_mode_uses_vlm_per_page():
         config={"full_page": True, "image_dir": None, "dpi": 120, "table_fallback": True},
     )
     assert md.count("# Page md") == n_pages  # one VLM transcription per page
+
+
+def test_map_ordered_preserves_order_concurrently():
+    items = list(range(20))
+    assert map_ordered(lambda x: x * x, items, concurrency=8) == [x * x for x in items]
+
+
+def test_map_ordered_sequential_and_empty():
+    assert map_ordered(lambda x: x + 1, [1, 2, 3], concurrency=1) == [2, 3, 4]
+    assert map_ordered(lambda x: x, [], concurrency=4) == []
+
+
+def test_map_ordered_actually_runs_in_parallel():
+    # A Barrier of size n only releases when all n calls are in flight at once;
+    # if work were serialized, barrier.wait() would time out (BrokenBarrierError).
+    n = 4
+    barrier = threading.Barrier(n, timeout=5)
+    assert map_ordered(lambda i: (barrier.wait(), i)[1], list(range(n)), concurrency=n) == [0, 1, 2, 3]
+
+
+def test_concurrent_vlm_failure_falls_back_to_grid(table_pdf_bytes):
+    class Boom:
+        @property
+        def chat(self):
+            raise RuntimeError("network")
+
+    vlm = VlmService(Boom(), "m")
+    md = _convert(
+        table_pdf_bytes,
+        vlm=vlm,
+        config={"full_page": False, "image_dir": None, "dpi": 120, "table_fallback": True, "concurrency": 4},
+    )
+    # VLM raised -> graceful fallback to the pdfplumber grid for the bordered table
+    assert "H1" in md and "H2" in md

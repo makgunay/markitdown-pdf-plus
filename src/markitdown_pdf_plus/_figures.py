@@ -25,6 +25,23 @@ def render_bbox_png_b64(pdf_bytes: bytes, page_index: int, bbox: BBox, dpi: int 
     return base64.b64encode(out.getvalue()).decode()
 
 
+def render_pages_b64(pdf_bytes: bytes, dpi: int = 200) -> list[str]:
+    """Render every page to a base64-encoded PNG, opening the document once.
+
+    Sequential on purpose: pypdfium2 is kept single-threaded. Shared by the
+    whole-page backends (local full_page, paddleocr_vl).
+    """
+    pdf = pdfium.PdfDocument(pdf_bytes)
+    scale = dpi / 72.0
+    out: list[str] = []
+    for i in range(len(pdf)):
+        pil = pdf[i].render(scale=scale).to_pil()
+        buf = io.BytesIO()
+        pil.save(buf, format="PNG")
+        out.append(base64.b64encode(buf.getvalue()).decode())
+    return out
+
+
 class FigureExtractor:
     def __init__(self, image_dir: str | None, dpi: int = 200):
         self.image_dir = image_dir

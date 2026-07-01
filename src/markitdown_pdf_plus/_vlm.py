@@ -65,6 +65,16 @@ class VlmService:
         md = _strip_fences(raw)
         return md if "|" in md else None
 
+    def transcribe_page(self, b64_png: str, prompt: str | None = None) -> str:
+        """Transcribe a whole-page PNG to Markdown, stripping code fences.
+
+        Used by the whole-page backends (local full_page, paddleocr_vl). Fail-soft:
+        returns ``""`` when the call fails so a single bad page never aborts the doc.
+        Doc-parsing VLMs commonly wrap output in ```markdown fences; strip them.
+        """
+        raw = self._call(b64_png, prompt or self.table_prompt)
+        return _strip_fences(raw) if raw else ""
+
     def caption_figure(self, b64_png: str) -> str | None:
         raw = self._call(b64_png, self.caption_prompt)
         return _strip_fences(raw) if raw else None

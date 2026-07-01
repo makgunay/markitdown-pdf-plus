@@ -110,6 +110,25 @@ Assessment only — **not prototyped, not integrated.** Next concrete step if ad
 `/v1/ocr` backend against `2025059pap.pdf` (needs a `MISTRAL_API_KEY`) to produce a real measured
 scoreboard row, then decide v0.2 framing (Mistral cloud backend vs TATR local hybrid).
 
+> **Update 2026-06-27 (v0.2 landed):** The backend-selectable architecture + the Mistral OCR 4 cloud
+> backend + a local PaddleOCR-VL/dots.ocr endpoint backend + a concurrency overhaul were implemented
+> in `markitdown-pdf-plus` 0.2.0 (see CHANGELOG). `pdf_plus_backend="mistral_ocr"` (zero-dep stdlib
+> `urllib` adapter, pinned `mistral-ocr-4-0`) and `pdf_plus_backend="paddleocr_vl"` (reuses the
+> OpenAI-compatible `llm_client` hook, Apple-Silicon-capable via `mlx_vlm.server`) are both opt-in,
+> never default. The remaining open item from this assessment is the **measured scoreboard row**: run
+> the upgraded `tests/eval/run_eval.py --backend mistral_ocr` (and `--backend paddleocr_vl`) against
+> `2025059pap.pdf` to turn the projected ~90+ into a real number on our rubric.
+>
+> **Update 2026-06-28 (table-quality metrics landed):** the scoreboard now has real tooling. The eval
+> harness gained two complementary table-quality metrics behind the `eval` extra (`apted`):
+> `--teds` (content-aware TEDS + structure-only TEDS-Struct in `tests/eval/teds.py`) scored against a
+> reference-model pseudo-ground-truth (Mistral OCR treated as truth, per the "never had ground-truth
+> HTML" constraint in [02](02-research-and-benchmarks.md)), and `--judge` (a source-image-grounded
+> vision LLM-judge in `tests/eval/judge.py`) which needs no ground truth and tracks the TEDS-vs-human
+> finding that an LLM-judge correlates with humans far better than TEDS. TEDS is the deterministic
+> regression tracker; the judge is the quality gate. Still pending: actually *running* both against
+> `2025059pap.pdf` with a key/endpoint to populate the row.
+
 Sources: [model card](https://docs.mistral.ai/models/model-cards/ocr-4-0) ·
 [announcement](https://mistral.ai/news/ocr-4/) ·
 [OCR capabilities](https://docs.mistral.ai/capabilities/OCR/basic_ocr/) ·

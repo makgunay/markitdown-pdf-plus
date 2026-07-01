@@ -21,7 +21,8 @@ deps). There is no venv in this repo.
 
 ```bash
 # One-time: install editable into the sibling venv
-../markitdown/.venv/bin/pip install -e ".[test,dev]"
+# (add the `eval` extra for the TEDS table-quality metric: apted)
+../markitdown/.venv/bin/pip install -e ".[test,dev,eval]"
 
 # Lint / format / type-check (configs live in pyproject.toml)
 ruff check src tests
@@ -71,6 +72,12 @@ RUN_VLM_INTEGRATION=1 ../markitdown/.venv/bin/python -m pytest tests/test_integr
 # Real-document eval — structure only, then with the Qwen VLM pass
 ../markitdown/.venv/bin/python tests/eval/run_eval.py
 PDFPLUS_OLLAMA=1 ../markitdown/.venv/bin/python tests/eval/run_eval.py
+
+# Table-quality metrics (needs the `eval` extra): deterministic TEDS vs a
+# reference-model pseudo-GT (default ref: mistral_ocr), and a vision LLM-judge.
+MISTRAL_API_KEY=... ../markitdown/.venv/bin/python tests/eval/run_eval.py --teds
+PDFPLUS_JUDGE_BASE=https://api.openai.com/v1 PDFPLUS_JUDGE_KEY=sk-... \
+  ../markitdown/.venv/bin/python tests/eval/run_eval.py --judge --judge-model gpt-4o
 
 # Confirm the plugin registers / overrides the built-in PDF converter
 ../markitdown/.venv/bin/markitdown --list-plugins
